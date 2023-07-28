@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  commit-tracker
+
+  Commit tracker for GitHub profile.
+
+Parameters:
+  pEnvFilter:
+    Type: String
+    Description: Log Filter
+
+  pGitHubToken:
+    Type: String
+    Description: GitHub Personal Access Token
+
+  pGitHubConfig:
+    Type: String
+    Description: GitHub Config
+
+Resources:
+  CommitTrackerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: rust-cargolambda
+    Properties:
+      FunctionName: commit-tracker
+      CodeUri: ./
+      Handler: bootstrap
+      Runtime: provided.al2
+      Architectures:
+        - x86_64
+      Timeout: 300
+      MemorySize: 128
+      Environment:
+        Variables:
+          ENV_FILTER: !Ref pEnvFilter
+          GH_TOKEN: !Ref pGitHubToken
+          GH_CONFIG: !Ref pGitHubConfig
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
