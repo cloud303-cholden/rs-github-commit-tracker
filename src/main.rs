@@ -29,6 +29,7 @@ struct Request {}
 async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Box<dyn std::error::Error>> {
     log::set_max_level(log::LevelFilter::Warn);
 
+    // Hardcoded allowed filetypes for now.
     let allowed_filetypes = [
         "rs".to_string(),
         "py".to_string(),
@@ -36,6 +37,7 @@ async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Box<
         "go".to_string(),
         "ts".to_string(),
         "vue".to_string(),
+        "svelte".to_string(),
     ];
 
     let github = octocrab::OctocrabBuilder::default()
@@ -68,10 +70,12 @@ async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Box<
         );
 
     let mut stats = HashMap::<String, u64>::new();
-    let gh_config = env::var("GH_CONFIG")?;
-    let config: HashMap<String, Vec<String>> = serde_json::from_str(&gh_config)?;
-    let since: DateTime<Utc> = Utc.with_ymd_and_hms(2023, 1, 1, 0, 0, 0).unwrap();
 
+    // Hardcoded sample repository configuration.
+    let config: HashMap<String, Vec<String>> = serde_json::from_str("{\"organization_1\":[\"repo_1\",\"repo_2\"]}")?;
+    let since: DateTime<Utc> = Utc.with_ymd_and_hms(2022, 1, 1, 0, 0, 0).unwrap();
+
+    // This takes forever!!!
     for (owner, repos) in config {
         for repo in repos {
             println!("{}", &repo);
@@ -142,7 +146,7 @@ async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Box<
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let env_filter = env::var("ENV_FILTER")
-        .unwrap_or("aws_config=warn,hyper=info".to_string());
+        .unwrap_or("aws_config=warn,hyper=info,github-commit-tracker=debug".to_string());
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .with_env_filter(env_filter)
